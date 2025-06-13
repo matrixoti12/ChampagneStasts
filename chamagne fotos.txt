@@ -1,0 +1,45 @@
+Hay jugadores que falta y les faltan la fotos , luego se las agrego manual , igual faltan logos de equipos
+
+
+Jugador , foto ,equipo , posicion
+Tacua , https://i.imgur.com/p7vjmSl.png, New gen, Defensa
+Alexis , https://i.imgur.com/Tfytcqv.png, Colon , Medio
+Diego , https://i.imgur.com/Ejec8Gj.png, Chamapagne , defensa
+Jeffer, https://i.imgur.com/aRvsjLd.png, Champagne , delantero 
+Minileny , https://i.imgur.com/RnCe4F0.png, Baigon , Portero
+Vino , https://i.imgur.com/sZGlhB3.png, Man.City, delantero
+Leny , https://i.imgur.com/7dzXZWC.png, Champagne, defensa
+Abel , https://i.imgur.com/cFooFMn.png, Champagne, defensa
+Dani, https://i.imgur.com/3MeFRxC.png, Baigon, delantero
+Angel, https://i.imgur.com/etWrE4c.png ,Guazapa, Medio
+Juve,Baigon, Delantero
+Sergi,Champagne,Defensa
+Brayan,Champagne, Defensa
+Pitu,New Gen, Delantero
+Aron,Santos,Medio
+Elias,https://i.imgur.com/sSRVlgi.png,Guazapa,Defensa
+jaki,https://i.imgur.com/jIzecGr.png,Champagne,Portero
+German,https://i.imgur.com/BkFUiyD.png,Champagne, medio
+Adonay,https://i.imgur.com/sMHs3Tf.png,New Gen , Polibalente
+Memito,https://i.imgur.com/8WJf4oM.png, New Gen, Delantero
+Luisiki,New Gen , Delantero
+
+
+logo de la liga Guazapa : https://i.imgur.com/nrnuP9W.png
+logo de la web : https://i.imgur.com/zdxJOLQ.png
+
+
+Equipos de los integrantes del grupo
+champagne : https://i.imgur.com/YKKJbTQ.png
+baigon : https://i.imgur.com/F0WSKNq.png
+New Gen : https://i.imgur.com/SKUSNii.png
+Colon 
+Guazapa FC
+Man.city
+Santos
+
+
+
+
+
+

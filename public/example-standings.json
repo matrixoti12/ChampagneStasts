@@ -1,0 +1,23 @@
+[
+  {
+    "name": "PSG",
+    "wins": 19,
+    "draws": 2,
+    "losses": 3,
+    "points": 59
+  },
+  {
+    "name": "Manchester City",
+    "wins": 18,
+    "draws": 4,
+    "losses": 2,
+    "points": 58
+  },
+  {
+    "name": "Liverpool",
+    "wins": 16,
+    "draws": 6,
+    "losses": 2,
+    "points": 54
+  }
+]
