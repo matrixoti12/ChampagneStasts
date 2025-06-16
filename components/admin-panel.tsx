@@ -17,6 +17,34 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [teamStandings, setTeamStandings] = useState("")
   const [isUploading, setIsUploading] = useState(false)
 
+  const validateMatchSchedule = (schedule: any[]): boolean => {
+    if (!Array.isArray(schedule)) {
+      alert("El JSON debe ser un array de partidos")
+      return false
+    }
+
+    for (const match of schedule) {
+      if (!match.id || !match.home_team || !match.away_team || !match.date || !match.time) {
+        alert("Cada partido debe tener: id, home_team, away_team, date y time")
+        return false
+      }
+
+      // Validar formato de fecha (YYYY-MM-DD)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(match.date)) {
+        alert("El formato de fecha debe ser YYYY-MM-DD")
+        return false
+      }
+
+      // Validar formato de hora (HH:MM)
+      if (!/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(match.time)) {
+        alert("El formato de hora debe ser HH:MM")
+        return false
+      }
+    }
+
+    return true
+  }
+
   const uploadMatchSchedule = async () => {
     if (!hasValidCredentials) {
       alert("Supabase configuration required for admin functionality")
@@ -25,18 +53,56 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
     setIsUploading(true)
     try {
+      console.log("Parsing JSON data...");
       const schedule = JSON.parse(matchSchedule)
+      
+      console.log("Validating schedule format...");
+      if (!validateMatchSchedule(schedule)) {
+        setIsUploading(false)
+        return
+      }
 
-      await supabase.from("json_uploads").insert({
+      // Verificación adicional antes de subir
+      const verification = confirm(`¿Confirmas que deseas subir ${schedule.length} partidos?\n\nPrimer partido: ${schedule[0].home_team} vs ${schedule[0].away_team}\nÚltimo partido: ${schedule[schedule.length-1].home_team} vs ${schedule[schedule.length-1].away_team}`);
+      
+      if (!verification) {
+        setIsUploading(false);
+        return;
+      }
+
+      console.log("Uploading to Supabase...");
+      const { data, error } = await supabase.from("json_uploads").insert({
         type: "match_schedule",
         data: schedule,
         uploaded_by: "German Rauda",
-      })
+      }).select()
 
-      alert("Match schedule uploaded successfully!")
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+
+      console.log("Upload successful:", data);
+      alert("¡Calendario de partidos subido exitosamente!")
       setMatchSchedule("")
+      
+      // Esperar un momento antes de recargar
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000);
     } catch (error) {
-      alert("Error uploading match schedule: " + error)
+      console.error("Upload error:", error);
+      if (error instanceof SyntaxError) {
+        alert("Error: JSON inválido. Por favor verifica el formato")
+      } else {
+        alert(
+          `Error al subir el calendario: ${
+            typeof error === "object" && error !== null && "message" in error
+              ? (error as { message?: string }).message
+              : String(error)
+          }`
+        )
+      }
     }
     setIsUploading(false)
   }

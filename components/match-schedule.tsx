@@ -30,7 +30,11 @@ export default function MatchSchedule() {
   const loadMatches = async () => {
     setIsLoading(true)
     try {
+      console.log("Loading matches...");
+      console.log("Has valid credentials:", hasValidCredentials);
+      
       if (!hasValidCredentials) {
+        console.log("Using mock data");
         // Use mock data when Supabase is not configured
         const mockMatches: Match[] = [
           {
@@ -86,23 +90,39 @@ export default function MatchSchedule() {
       }
 
       // Get the latest match schedule from json_uploads
-      const { data, error } = await supabase
-        .from("json_uploads")
-        .select("*")
-        .eq("type", "match_schedule")
-        .order("created_at", { ascending: false })
-        .limit(1)
+      try {
+        console.log("Fetching from Supabase...");
+        const { data, error } = await supabase
+          .from("json_uploads")
+          .select("*")
+          .eq("type", "match_schedule")
+          .order("created_at", { ascending: false })
+          .limit(1)
 
-      if (error) {
-        console.error("Error fetching matches:", error)
-        setMatches([])
-        return
-      }
+        console.log("Supabase response:", { data, error });
 
-      if (data && data.length > 0 && data[0].data && Array.isArray(data[0].data)) {
+        if (error) {
+          console.error("Error fetching matches:", error)
+          setMatches([])
+          return
+        }
+
+        if (!data || !Array.isArray(data) || data.length === 0) {
+          console.log("No data found")
+          setMatches([])
+          return
+        }
+
+        if (!data[0].data || !Array.isArray(data[0].data)) {
+          console.log("Invalid data format:", data[0])
+          setMatches([])
+          return
+        }
+
+        console.log("Valid match data found:", data[0].data)
         setMatches(data[0].data)
-      } else {
-        console.log("No valid match data found")
+      } catch (supabaseError) {
+        console.error("Supabase operation failed:", supabaseError)
         setMatches([])
       }
     } catch (error) {
@@ -115,17 +135,34 @@ export default function MatchSchedule() {
   // Group matches by date
   const matchesByDate = matches.reduce(
     (acc, match) => {
-      if (!acc[match.date]) {
-        acc[match.date] = []
+      try {
+        if (!match || !match.date) {
+          console.error('Invalid match object:', match);
+          return acc;
+        }
+        
+        if (!acc[match.date]) {
+          acc[match.date] = []
+        }
+        acc[match.date].push(match)
+        return acc
+      } catch (error) {
+        console.error('Error processing match:', match, error);
+        return acc;
       }
-      acc[match.date].push(match)
-      return acc
     },
     {} as Record<string, Match[]>,
   )
 
-  // Sort dates
-  const sortedDates = Object.keys(matchesByDate).sort()
+  // Sort dates and validate
+  const sortedDates = Object.keys(matchesByDate).filter(date => {
+    try {
+      return /^\d{4}-\d{2}-\d{2}$/.test(date) && !isNaN(new Date(date).getTime());
+    } catch {
+      console.error('Invalid date:', date);
+      return false;
+    }
+  }).sort()
 
   // Format date for display
   const formatDate = (dateString: string) => {

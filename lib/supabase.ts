@@ -19,9 +19,27 @@ if (hasValidCredentials) {
   supabase = {
     from: (table: string) => ({
       select: (columns?: string) => ({
-        order: (column: string, options?: any) => Promise.resolve({ data: [], error: null }),
+        order: (column: string, options?: any) => ({
+          limit: (n: number) => Promise.resolve({
+            data: [{
+              type: "match_schedule",
+              data: [],
+              created_at: new Date().toISOString()
+            }],
+            error: null
+          })
+        }),
         eq: (column: string, value: any) => ({
-          gte: (column: string, value: any) => Promise.resolve({ data: [], error: null }),
+          order: (column: string, options?: any) => ({
+            limit: (n: number) => Promise.resolve({
+              data: [{
+                type: "match_schedule",
+                data: [],
+                created_at: new Date().toISOString()
+              }],
+              error: null
+            })
+          })
         }),
       }),
       insert: (data: any) => Promise.resolve({ data: null, error: null }),
