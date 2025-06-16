@@ -93,13 +93,21 @@ export default function MatchSchedule() {
         .order("created_at", { ascending: false })
         .limit(1)
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching matches:", error)
+        setMatches([])
+        return
+      }
 
-      if (data && data.length > 0) {
+      if (data && data.length > 0 && data[0].data && Array.isArray(data[0].data)) {
         setMatches(data[0].data)
+      } else {
+        console.log("No valid match data found")
+        setMatches([])
       }
     } catch (error) {
       console.error("Error loading matches:", error)
+      setMatches([])
     }
     setIsLoading(false)
   }
@@ -173,23 +181,30 @@ export default function MatchSchedule() {
               <p>No hay partidos programados actualmente.</p>
             </div>
           ) : (
-            <Tabs defaultValue={sortedDates[0]} className="w-full">
+            <Tabs defaultValue={sortedDates[0] || "no-dates"} className="w-full">
               <TabsList className="grid grid-cols-3 md:grid-cols-5 mb-4 bg-gray-800 border border-gray-600 w-full overflow-x-auto">
-                {sortedDates.slice(0, 5).map((date) => (
-                  <TabsTrigger
-                    key={date}
-                    value={date}
-                    className="text-xs data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-gray-400 px-2 py-2 whitespace-nowrap"
-                  >
-                    {new Date(date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}
+                {sortedDates.length > 0 ? (
+                  sortedDates.slice(0, 5).map((date) => (
+                    <TabsTrigger
+                      key={date}
+                      value={date}
+                      className="text-xs data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-gray-400 px-2 py-2 whitespace-nowrap"
+                    >
+                      {new Date(date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}
+                    </TabsTrigger>
+                  ))
+                ) : (
+                  <TabsTrigger value="no-dates" className="text-xs data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-gray-400 px-2 py-2">
+                    No hay fechas
                   </TabsTrigger>
-                ))}
+                )}
               </TabsList>
 
-              {sortedDates.map((date) => (
-                <TabsContent key={date} value={date} className="space-y-3">
-                  <h3 className="text-base font-medium text-amber-400 mb-3">{formatDate(date)}</h3>
-                  <div className="space-y-3">
+              {sortedDates.length > 0 ? (
+                sortedDates.map((date) => (
+                  <TabsContent key={date} value={date} className="space-y-3">
+                    <h3 className="text-base font-medium text-amber-400 mb-3">{formatDate(date)}</h3>
+                    <div className="space-y-3">
                     {matchesByDate[date].map((match) => (
                       <div
                         key={match.id}
@@ -250,9 +265,14 @@ export default function MatchSchedule() {
                         </div>
                       </div>
                     ))}
-                  </div>
+                    </div>
+                  </TabsContent>
+                ))
+              ) : (
+                <TabsContent value="no-dates" className="text-center py-8 text-gray-400">
+                  <p>No hay partidos programados para mostrar.</p>
                 </TabsContent>
-              ))}
+              )}
             </Tabs>
           )}
         </CardContent>
