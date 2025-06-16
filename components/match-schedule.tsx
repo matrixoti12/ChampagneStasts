@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,14 @@ interface Match {
 }
 
 export default function MatchSchedule() {
-  const [matches, setMatches] = useState<Match[]>([])
+  const [matches, setMatches] = useState<Match[]>(() => {
+    try {
+      return []
+    } catch (error) {
+      console.error('Error initializing matches:', error)
+      return []
+    }
+  })
   const [isLoading, setIsLoading] = useState(true)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
 
@@ -133,26 +140,38 @@ export default function MatchSchedule() {
   }
 
   // Group matches by date
-  const matchesByDate = matches.reduce(
-    (acc, match) => {
-      try {
-        if (!match || !match.date) {
-          console.error('Invalid match object:', match);
-          return acc;
-        }
-        
-        if (!acc[match.date]) {
-          acc[match.date] = []
-        }
-        acc[match.date].push(match)
-        return acc
-      } catch (error) {
-        console.error('Error processing match:', match, error);
-        return acc;
+  const matchesByDate = useMemo(() => {
+    try {
+      if (!Array.isArray(matches)) {
+        console.error('Matches is not an array:', matches);
+        return {};
       }
-    },
-    {} as Record<string, Match[]>,
-  )
+
+      return matches.reduce(
+        (acc, match) => {
+          try {
+            if (!match || !match.date) {
+              console.error('Invalid match object:', match);
+              return acc;
+            }
+            
+            if (!acc[match.date]) {
+              acc[match.date] = []
+            }
+            acc[match.date].push(match)
+            return acc
+          } catch (error) {
+            console.error('Error processing match:', match, error);
+            return acc;
+          }
+        },
+        {} as Record<string, Match[]>,
+      )
+    } catch (error) {
+      console.error('Error grouping matches by date:', error);
+      return {};
+    }
+  }, [matches])
 
   // Sort dates and validate
   const sortedDates = Object.keys(matchesByDate).filter(date => {
@@ -218,16 +237,16 @@ export default function MatchSchedule() {
               <p>No hay partidos programados actualmente.</p>
             </div>
           ) : (
-            <Tabs defaultValue={sortedDates[0] || "no-dates"} className="w-full">
+            <Tabs defaultValue="tab-0" className="w-full">
               <TabsList className="grid grid-cols-3 md:grid-cols-5 mb-4 bg-gray-800 border border-gray-600 w-full overflow-x-auto">
-                {sortedDates.length > 0 ? (
-                  sortedDates.slice(0, 5).map((date) => (
+                {Array.isArray(sortedDates) && sortedDates.length > 0 ? (
+                  sortedDates.slice(0, 5).map((date, index) => (
                     <TabsTrigger
-                      key={date}
-                      value={date}
+                      key={`tab-${index}`}
+                      value={`tab-${index}`}
                       className="text-xs data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-gray-400 px-2 py-2 whitespace-nowrap"
                     >
-                      {new Date(date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}
+                      {date ? new Date(date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" }) : "Fecha no válida"}
                     </TabsTrigger>
                   ))
                 ) : (
@@ -237,12 +256,12 @@ export default function MatchSchedule() {
                 )}
               </TabsList>
 
-              {sortedDates.length > 0 ? (
-                sortedDates.map((date) => (
-                  <TabsContent key={date} value={date} className="space-y-3">
+              {Array.isArray(sortedDates) && sortedDates.length > 0 ? (
+                sortedDates.map((date, index) => (
+                  <TabsContent key={`tab-${index}`} value={`tab-${index}`} className="space-y-3">
                     <h3 className="text-base font-medium text-amber-400 mb-3">{formatDate(date)}</h3>
                     <div className="space-y-3">
-                    {matchesByDate[date].map((match) => (
+                    {Array.isArray(matchesByDate[date]) ? matchesByDate[date].map((match) => (
                       <div
                         key={match.id}
                         className="bg-gray-800 rounded-lg p-3 border border-gray-700 hover:bg-gray-700 transition-colors"
@@ -301,7 +320,11 @@ export default function MatchSchedule() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-center py-4 text-gray-400">
+                        <p>No hay partidos para esta fecha</p>
+                      </div>
+                    )}
                     </div>
                   </TabsContent>
                 ))
