@@ -127,7 +127,18 @@ export default function MatchSchedule() {
         }
 
         console.log("Valid match data found:", data[0].data)
-        setMatches(data[0].data)
+        // Normalizar los datos para asegurar consistencia
+        const normalizedMatches = data[0].data.map((match: any) => ({
+          id: match.id?.toString() || '',
+          home_team: match.home_team || '',
+          away_team: match.away_team || match.away_team_team || '', // Manejar ambos casos
+          date: match.date || '',
+          time: match.time || '',
+          home_logo: match.home_logo || null,
+          away_logo: match.away_logo || null
+        }));
+        console.log("Normalized matches:", normalizedMatches);
+        setMatches(normalizedMatches)
       } catch (supabaseError) {
         console.error("Supabase operation failed:", supabaseError)
         setMatches([])
@@ -237,13 +248,13 @@ export default function MatchSchedule() {
               <p>No hay partidos programados actualmente.</p>
             </div>
           ) : (
-            <Tabs defaultValue="tab-0" className="w-full">
+            <Tabs defaultValue={sortedDates[0] || "no-dates"} className="w-full">
               <TabsList className="grid grid-cols-3 md:grid-cols-5 mb-4 bg-gray-800 border border-gray-600 w-full overflow-x-auto">
                 {Array.isArray(sortedDates) && sortedDates.length > 0 ? (
-                  sortedDates.slice(0, 5).map((date, index) => (
+                  sortedDates.slice(0, 5).map((date) => (
                     <TabsTrigger
-                      key={`tab-${index}`}
-                      value={`tab-${index}`}
+                      key={date}
+                      value={date}
                       className="text-xs data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-gray-400 px-2 py-2 whitespace-nowrap"
                     >
                       {date ? new Date(date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" }) : "Fecha no válida"}
@@ -257,8 +268,8 @@ export default function MatchSchedule() {
               </TabsList>
 
               {Array.isArray(sortedDates) && sortedDates.length > 0 ? (
-                sortedDates.map((date, index) => (
-                  <TabsContent key={`tab-${index}`} value={`tab-${index}`} className="space-y-3">
+                sortedDates.map((date) => (
+                  <TabsContent key={date} value={date} className="space-y-3">
                     <h3 className="text-base font-medium text-amber-400 mb-3">{formatDate(date)}</h3>
                     <div className="space-y-3">
                     {Array.isArray(matchesByDate[date]) ? matchesByDate[date].map((match) => (
