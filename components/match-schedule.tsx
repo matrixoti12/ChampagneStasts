@@ -197,7 +197,10 @@ export default function MatchSchedule() {
   // Format date for display
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(dateString);
+      // Crear la fecha en UTC agregando la hora para evitar problemas de zona horaria
+      const [year, month, day] = dateString.split('-').map(num => parseInt(num));
+      const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      
       if (isNaN(date.getTime())) {
         console.error('Invalid date:', dateString);
         return 'Fecha inválida';
@@ -210,6 +213,12 @@ export default function MatchSchedule() {
         day: "numeric",
         timeZone: "America/Guatemala"
       };
+
+      console.log('Formatting date:', {
+        original: dateString,
+        parsed: date.toISOString(),
+        formatted: date.toLocaleDateString("es-ES", options)
+      });
 
       return date.toLocaleDateString("es-ES", options)
     } catch (error) {
@@ -275,7 +284,15 @@ export default function MatchSchedule() {
                       value={date}
                       className="text-xs data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-gray-400 px-2 py-2 whitespace-nowrap"
                     >
-                      {date ? new Date(date).toLocaleDateString("es-ES", { weekday: "short", day: "numeric" }) : "Fecha no válida"}
+                      {date ? (() => {
+                        const [year, month, day] = date.split('-').map(num => parseInt(num));
+                        const dateObj = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+                        return dateObj.toLocaleDateString("es-ES", {
+                          weekday: "short",
+                          day: "numeric",
+                          timeZone: "America/Guatemala"
+                        });
+                      })() : "Fecha no válida"}
                     </TabsTrigger>
                   ))
                 ) : (
