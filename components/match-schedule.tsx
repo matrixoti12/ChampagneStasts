@@ -196,8 +196,26 @@ export default function MatchSchedule() {
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { weekday: "long", year: "numeric", month: "long", day: "numeric" }
-    return new Date(dateString).toLocaleDateString("es-ES", options)
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return 'Fecha inválida';
+      }
+
+      const options: Intl.DateTimeFormatOptions = {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "America/Guatemala"
+      };
+
+      return date.toLocaleDateString("es-ES", options)
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Error en fecha';
+    }
   }
 
   // Truncate team names for mobile

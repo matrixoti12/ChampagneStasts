@@ -8,6 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { supabase, hasValidCredentials } from "@/lib/supabase"
 import { Upload, FileText, Calendar, Trophy } from "lucide-react"
 
+interface Match {
+  id: string;
+  home_team: string;
+  away_team: string;
+  date: string;
+  time: string;
+}
+
+interface MatchSchedule {
+  matches?: Match[];
+}
+
 interface AdminPanelProps {
   onClose: () => void
 }
@@ -17,12 +29,13 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [teamStandings, setTeamStandings] = useState("")
   const [isUploading, setIsUploading] = useState(false)
 
-  const validateMatchSchedule = (schedule: any[]): boolean => {
+  const validateMatchSchedule = (schedule: Match[]): boolean => {
     if (!Array.isArray(schedule)) {
       alert("El JSON debe ser un array de partidos")
       return false
     }
 
+    const currentYear = new Date().getFullYear()
     for (const match of schedule) {
       if (!match.id || !match.home_team || !match.away_team || !match.date || !match.time) {
         alert("Cada partido debe tener: id, home_team, away_team, date y time")
@@ -31,13 +44,26 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
 
       // Validar formato de fecha (YYYY-MM-DD)
       if (!/^\d{4}-\d{2}-\d{2}$/.test(match.date)) {
-        alert("El formato de fecha debe ser YYYY-MM-DD")
+        alert(`Formato de fecha inválido: ${match.date}. Debe ser YYYY-MM-DD`)
+        return false
+      }
+
+      // Validar año
+      const year = parseInt(match.date.split('-')[0])
+      if (year < currentYear) {
+        alert(`Año inválido en fecha: ${match.date}. Debe ser ${currentYear} o posterior`)
         return false
       }
 
       // Validar formato de hora (HH:MM)
       if (!/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(match.time)) {
-        alert("El formato de hora debe ser HH:MM")
+        alert(`Formato de hora inválido: ${match.time}. Debe ser HH:MM (24 horas)`)
+        return false
+      }
+
+      // Validar equipos
+      if (!/^[A-Za-z0-9\s.]+$/.test(match.home_team) || !/^[A-Za-z0-9\s.]+$/.test(match.away_team)) {
+        alert(`Nombres de equipo inválidos: "${match.home_team}" vs "${match.away_team}"`)
         return false
       }
     }
@@ -54,7 +80,21 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     setIsUploading(true)
     try {
       console.log("Parsing JSON data...");
-      const schedule = JSON.parse(matchSchedule)
+      let schedule = JSON.parse(matchSchedule)
+      
+      // Si los datos vienen envueltos en un objeto "matches", usar ese array
+      if (schedule.matches && Array.isArray(schedule.matches)) {
+        schedule = schedule.matches
+      }
+
+      // Validar y corregir las fechas si es necesario
+      schedule = schedule.map((match: Match) => {
+        // Asegurarse de que la fecha use el año correcto (2025)
+        if (match.date && match.date.startsWith('2024-')) {
+          match.date = '2025-' + match.date.slice(5)
+        }
+        return match
+      })
       
       console.log("Validating schedule format...");
       if (!validateMatchSchedule(schedule)) {
@@ -180,29 +220,31 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                 <Textarea
                   value={matchSchedule}
                   onChange={(e) => setMatchSchedule(e.target.value)}
-                  placeholder={`[
-  {
-    "id": "1",
-    "home_team": "Champagne",
-    "away_team": "New Gen",
-    "date": "2024-01-20",
-    "time": "20:00"
-  },
-  {
-    "id": "2",
-    "home_team": "Baigon",
-    "away_team": "Man.City",
-    "date": "2024-01-20",
-    "time": "21:30"
-  },
-  {
-    "id": "3",
-    "home_team": "Colon",
-    "away_team": "Santos",
-    "date": "2024-01-21",
-    "time": "20:00"
-  }
-]`}
+                  placeholder={`{
+  "matches": [
+    {
+      "id": "1",
+      "home_team": "MILAN",
+      "away_team": "COLON",
+      "date": "2025-06-16",
+      "time": "18:00"
+    },
+    {
+      "id": "2",
+      "home_team": "VIBORAS",
+      "away_team": "BAIGON",
+      "date": "2025-06-16",
+      "time": "18:45"
+    },
+    {
+      "id": "3",
+      "home_team": "ATLETICO GH",
+      "away_team": "LION",
+      "date": "2025-06-16",
+      "time": "19:30"
+    }
+  ]
+}`}
                   rows={10}
                   className="font-mono text-sm"
                 />
